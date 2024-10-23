@@ -1,8 +1,8 @@
-package tukano.impl.storage;
+package main.java.tukano.impl.storage;
 
 import java.util.function.Consumer;
 
-import tukano.api.Result;
+import main.java.tukano.api.Result;
 
 public interface BlobStorage {
 		
@@ -13,5 +13,4 @@ public interface BlobStorage {
 	public Result<byte[]> read(String path);
 
 	public Result<Void> read(String path, Consumer<byte[]> sink);
-
 }

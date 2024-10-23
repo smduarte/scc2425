@@ -1,4 +1,4 @@
-package tukano.impl.data;
+package main.java.tukano.impl.data;
 
 import java.util.Objects;
 
@@ -11,7 +11,7 @@ public class Following{
 	@Id 
 	String follower;
 	
-	@Id 
+	@Id
 	String followee;
 
 	Following() {}
