@@ -3,7 +3,9 @@ package tukano.impl.storage;
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
-import tukano.api.result.Result;
+import tukano.api.Result;
+
+import java.util.function.Consumer;
 
 public class CloudStorage implements BlobStorage {
     // Get connection string in the storage access keys page
