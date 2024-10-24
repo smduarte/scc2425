@@ -7,10 +7,12 @@ import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.CosmosDatabase;
 import com.azure.cosmos.CosmosException;
 import com.azure.cosmos.models.CosmosItemRequestOptions;
-import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import main.java.tukano.api.Result;
+import com.azure.cosmos.models.CosmosBatch;
+import com.azure.cosmos.models.CosmosBatchResponse;
+import com.azure.cosmos.models.CosmosBatchOperationResult;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -64,12 +66,24 @@ public class Cosmos {
         client.close();
     }
 
+    public <T> Result<List<T>> sql(String queryStr, Class<T> clazz) {
+        return query(clazz, queryStr);
+    }
+
+    public <T> Result<List<T>> sql(Class<T> clazz, String fmt, Object... args) {
+        String formattedQuery = String.format(fmt, args);
+        return sql(formattedQuery, clazz);
+    }
+
     public <T> Result<T> getOne(String id, Class<T> clazz) {
         return tryCatch( () -> container.readItem(id, new PartitionKey(id), clazz).getItem());
     }
 
-    public <T> Result<?> deleteOne(T obj) {
-        return tryCatch( () -> container.deleteItem(obj, new CosmosItemRequestOptions()).getItem());
+    public <T> Result<T> deleteOne(T obj) {
+        return tryCatch( () -> {
+            container.deleteItem(obj, new CosmosItemRequestOptions());
+            return obj;
+        });
     }
 
     public <T> Result<T> updateOne(T obj) {
@@ -80,11 +94,26 @@ public class Cosmos {
         return tryCatch( () -> container.createItem(obj).getItem());
     }
 
-    public <T> Result<List<T>> query(Class<T> clazz, String queryStr) {
+    private <T> Result<List<T>> query(Class<T> clazz, String queryStr) {
         return tryCatch(() -> {
             var res = container.queryItems(queryStr, new CosmosQueryRequestOptions(), clazz);
             return res.stream().toList();
         });
+    }
+
+    public Result<Void> transaction(List<Runnable> operations, String partitionKeyValue) {
+            PartitionKey partitionKey = new PartitionKey(partitionKeyValue);
+            CosmosBatch batch = CosmosBatch.createCosmosBatch(partitionKey);
+            for (Runnable operation : operations) {
+                operation.run();  // Add operations to batch
+            }
+            CosmosBatchResponse response = container.executeCosmosBatch(batch);
+
+            if (!response.isSuccessStatusCode()) {
+                return Result.error(ErrorCode.CONFLICT);
+            }
+
+            return Result.ok();
     }
 
     <T> Result<T> tryCatch( Supplier<T> supplierFunc) {

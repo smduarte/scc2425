@@ -1,5 +1,6 @@
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/tukano/impl/rest/utils/CustomLoggingFilter.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/tukano/impl/data/Likes.java
+/Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/utils/CosmosDB.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/tukano/impl/rest/RestResource.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/tukano/api/Blobs.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/utils/DB.java
@@ -33,11 +34,11 @@
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/utils/Props.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/utils/Cosmos.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/test/test/Test.java
+/Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/tukano/impl/storage/BlobSystemStorage.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/tukano/impl/rest/utils/GenericExceptionMapper.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/utils/Args.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/test/tukano/clients/rest/RestClient.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/tukano/impl/data/Following.java
-/Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/tukano/impl/storage/CloudSystemStorage.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/utils/TLS.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/test/tukano/clients/rest/RestUsersClient.java
 /Users/Miguel/IdeaProjects/scc2425/scc2425-tukano/src/main/java/utils/IO.java

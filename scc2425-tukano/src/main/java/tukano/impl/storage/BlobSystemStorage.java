@@ -16,13 +16,13 @@ import jakarta.ws.rs.core.Response.Status;
 import main.java.tukano.api.Result;
 import main.java.utils.Hash;
 
-public class CloudSystemStorage implements BlobStorage {
+public class BlobSystemStorage implements BlobStorage {
     String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=scc212270663;AccountKey=N3VETIuitF5wTw2c2NHFiJnXSvuQqOLT68mXinwolfTRezxqY5VntPdt0e3zh0dO7LYB4NgOUxEO+ASt9HZDZQ==;EndpointSuffix=core.windows.net";
     String containerName = "images";
 
     private BlobContainerClient containerClient;
 
-    public CloudSystemStorage() {
+    public BlobSystemStorage() {
         // Initialize BlocContainerCLient
         containerClient = new BlobContainerClientBuilder()
                 .connectionString(storageConnectionString)
@@ -66,8 +66,6 @@ public class CloudSystemStorage implements BlobStorage {
         downloadSink(path, sink);
         return Result.ok();
     }
-
-
 
     private String upload(byte[] contents) {
         var key = Hash.of(contents);

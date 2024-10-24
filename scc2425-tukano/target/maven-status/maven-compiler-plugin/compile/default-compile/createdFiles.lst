@@ -1,5 +1,6 @@
 main/java/utils/DB.class
 main/java/tukano/impl/rest/utils/CustomLoggingFilter.class
+main/java/tukano/impl/storage/BlobSystemStorage.class
 main/java/tukano/impl/rest/TukanoRestServer.class
 main/java/tukano/api/Result$ErrorCode.class
 main/java/utils/TryCatch.class
@@ -21,6 +22,7 @@ main/test/test/Test.class
 main/java/tukano/api/rest/RestUsers.class
 main/java/tukano/impl/rest/RestUsersResource.class
 main/java/utils/TLS.class
+main/java/utils/CosmosDB.class
 main/java/tukano/impl/rest/utils/GenericExceptionMapper.class
 main/java/tukano/api/Result.class
 main/java/utils/Args.class
@@ -45,7 +47,6 @@ main/java/utils/Sleep.class
 main/java/tukano/impl/rest/RestShortsResource.class
 main/test/tukano/clients/rest/RestClient.class
 main/java/tukano/impl/Token.class
-main/java/tukano/impl/storage/CloudSystemStorage.class
 main/java/tukano/api/ErrorResult.class
 main/java/utils/IO.class
 main/test/tukano/clients/rest/RestShortsClient$3.class

@@ -11,7 +11,7 @@ import main.java.tukano.api.Blobs;
 import main.java.tukano.api.Result;
 import main.java.tukano.impl.rest.TukanoRestServer;
 import main.java.tukano.impl.storage.BlobStorage;
-import main.java.tukano.impl.storage.FilesystemStorage;
+import main.java.tukano.impl.storage.BlobSystemStorage;
 import main.java.utils.Hash;
 import main.java.utils.Hex;
 
@@ -30,7 +30,7 @@ public class JavaBlobs implements Blobs {
 	}
 	
 	private JavaBlobs() {
-		storage = new FilesystemStorage();
+		storage = new BlobSystemStorage();
 		baseURI = String.format("%s/%s/", TukanoRestServer.serverURI, Blobs.NAME);
 	}
 	

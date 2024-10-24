@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 import main.java.tukano.api.Result;
 import main.java.tukano.api.User;
 import main.java.tukano.api.Users;
-import main.java.utils.DB;
+import main.java.utils.CosmosDB;
 
 public class JavaUsers implements Users {
 	
@@ -38,7 +38,7 @@ public class JavaUsers implements Users {
 		if( badUserInfo( user ) )
 				return error(BAD_REQUEST);
 
-		return errorOrValue( DB.insertOne( user), user.getUserId() );
+		return errorOrValue( CosmosDB.insertOne( user), user.getUserId() );
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class JavaUsers implements Users {
 		if (userId == null)
 			return error(BAD_REQUEST);
 		
-		return validatedUserOrError( DB.getOne( userId, User.class), pwd);
+		return validatedUserOrError( CosmosDB.getOne( userId, User.class), pwd);
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public class JavaUsers implements Users {
 		if (badUpdateUserInfo(userId, pwd, other))
 			return error(BAD_REQUEST);
 
-		return errorOrResult( validatedUserOrError(DB.getOne( userId, User.class), pwd), user -> DB.updateOne( user.updateFrom(other)));
+		return errorOrResult( validatedUserOrError(CosmosDB.getOne( userId, User.class), pwd), user -> CosmosDB.updateOne( user.updateFrom(other)));
 	}
 
 	@Override
@@ -68,7 +68,7 @@ public class JavaUsers implements Users {
 		if (userId == null || pwd == null )
 			return error(BAD_REQUEST);
 
-		return errorOrResult( validatedUserOrError(DB.getOne( userId, User.class), pwd), user -> {
+		return errorOrResult( validatedUserOrError(CosmosDB.getOne( userId, User.class), pwd), user -> {
 
 			// Delete user shorts and related info asynchronously in a separate thread
 			Executors.defaultThreadFactory().newThread( () -> {
@@ -76,7 +76,7 @@ public class JavaUsers implements Users {
 				JavaBlobs.getInstance().deleteAllBlobs(userId, Token.get(userId));
 			}).start();
 			
-			return DB.deleteOne( user);
+			return CosmosDB.deleteOne( user);
 		});
 	}
 
@@ -85,7 +85,7 @@ public class JavaUsers implements Users {
 		Log.info( () -> format("searchUsers : patterns = %s\n", pattern));
 
 		var query = format("SELECT * FROM User u WHERE UPPER(u.userId) LIKE '%%%s%%'", pattern.toUpperCase());
-		var hits = DB.sql(query, User.class)
+		var hits = CosmosDB.sql(query, User.class)
 				.stream()
 				.map(User::copyWithoutPassword)
 				.toList();
