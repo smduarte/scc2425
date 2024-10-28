@@ -5,8 +5,8 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisCache {
-    private static final String RedisHostname = System.getenv("REDIS_HOSTNAME"); // Change for "redis_hostname
-    private static final String RedisKey = System.getenv("REDIS_KEY"); // Change for the key
+    private static final String RedisHostname = ""; // put the redis hostname
+    private static final String RedisKey = ""; // put the redis key 
     private static final int REDIS_PORT = 6380;  // Default for Azure
     private static final int REDIS_TIMEOUT = 1000;
     private static final boolean Redis_USE_TLS = true;
