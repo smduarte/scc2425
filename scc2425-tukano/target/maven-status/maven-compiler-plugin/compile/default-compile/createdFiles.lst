@@ -1,3 +1,4 @@
+main\java\tukano\impl\PostgresShorts.class
 main\java\tukano\api\Result$ErrorCode.class
 main\java\tukano\impl\JavaUsers.class
 main\java\tukano\api\Blobs.class
@@ -7,6 +8,7 @@ main\test\tukano\clients\rest\RestShortsClient$1.class
 main\java\tukano\api\OkResult.class
 main\java\tukano\api\Result.class
 main\java\tukano\api\Short.class
+main\java\tukano\impl\PostgresUsers.class
 main\java\tukano\impl\storage\BlobStorage.class
 main\java\utils\Random.class
 main\java\tukano\impl\storage\BlobSystemStorage.class
@@ -34,6 +36,8 @@ main\java\tukano\impl\rest\RestBlobsResource.class
 main\java\tukano\impl\JavaBlobs.class
 main\java\utils\Hash.class
 main\java\tukano\impl\Token.class
+main\java\utils\CosmosDBClient.class
+main\java\utils\StorageFactory.class
 main\java\tukano\api\ErrorResult.class
 main\java\utils\IO.class
 main\java\tukano\api\Users.class
