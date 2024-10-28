@@ -7,37 +7,38 @@ import main.java.tukano.api.User;
 import main.java.tukano.api.Users;
 import main.java.tukano.api.rest.RestUsers;
 import main.java.tukano.impl.JavaUsers;
+import main.java.utils.StorageFactory;
 
 @Singleton
 public class RestUsersResource extends RestResource implements RestUsers {
 
-	final Users impl;
+	final Users usersBackend;
 	public RestUsersResource() {
-		this.impl = JavaUsers.getInstance();
+		this.usersBackend = StorageFactory.getUsersBackend();
 	}
 	
 	@Override
 	public String createUser(User user) {
-		return super.resultOrThrow( impl.createUser( user));
+		return super.resultOrThrow(usersBackend.createUser(user));
 	}
 
 	@Override
 	public User getUser(String name, String pwd) {
-		return super.resultOrThrow( impl.getUser(name, pwd));
+		return super.resultOrThrow( usersBackend.getUser(name, pwd));
 	}
 	
 	@Override
 	public User updateUser(String name, String pwd, User user) {
-		return super.resultOrThrow( impl.updateUser(name, pwd, user));
+		return super.resultOrThrow( usersBackend.updateUser(name, pwd, user));
 	}
 
 	@Override
 	public User deleteUser(String name, String pwd) {
-		return super.resultOrThrow( impl.deleteUser(name, pwd));
+		return super.resultOrThrow( usersBackend.deleteUser(name, pwd));
 	}
 
 	@Override
 	public List<User> searchUsers(String pattern) {
-		return super.resultOrThrow( impl.searchUsers( pattern));
+		return super.resultOrThrow( usersBackend.searchUsers( pattern));
 	}
 }
