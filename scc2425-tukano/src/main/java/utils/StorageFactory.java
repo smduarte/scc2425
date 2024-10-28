@@ -4,8 +4,8 @@ import main.java.tukano.api.Shorts;
 import main.java.tukano.api.Users;
 import main.java.tukano.impl.JavaShorts;
 import main.java.tukano.impl.JavaUsers;
-import main.java.tukano.impl.PostgresShorts;
-import main.java.tukano.impl.PostgresUsers;
+import main.java.tukano.impl.HibernateShorts;
+import main.java.tukano.impl.HibernateUsers;
 
 public class StorageFactory {
 
@@ -19,7 +19,7 @@ public class StorageFactory {
         if ("nosql".equalsIgnoreCase(BACKEND_TYPE)) {
             return JavaUsers.getInstance();
         } else if ("postgres".equalsIgnoreCase(BACKEND_TYPE)) {
-            return PostgresUsers.getInstance();
+            return HibernateUsers.getInstance();
         } else {
             throw new IllegalArgumentException("Unsupported backend type: " + BACKEND_TYPE);
         }
@@ -33,7 +33,7 @@ public class StorageFactory {
         if ("nosql".equalsIgnoreCase(BACKEND_TYPE)) {
             return JavaShorts.getInstance();
         } else if ("postgres".equalsIgnoreCase(BACKEND_TYPE)) {
-            return PostgresShorts.getInstance();
+            return HibernateShorts.getInstance();
         } else {
             throw new IllegalArgumentException("Unsupported backend type: " + BACKEND_TYPE);
         }
