@@ -6,86 +6,89 @@ import tukano.impl.Token;
 
 /**
  * Represents a Short video uploaded by an user.
- * 
- * A short has an unique shortId and is owned by a given user; 
+ * <p>
+ * A short has an unique shortId and is owned by a given user;
  * Comprises of a short video, stored as a binary blob at some bloburl;.
  * A post also has a number of likes, which can increase or decrease over time. It is the only piece of information that is mutable.
  * A short is timestamped when it is created.
- *
  */
 @Entity
 public class Short {
-	
-	@Id
-	String shortId;
-	String ownerId;
-	String blobUrl;
-	long timestamp;
-	int totalLikes;
 
-	public Short() {}
-	
-	public Short(String shortId, String ownerId, String blobUrl, long timestamp, int totalLikes) {
-		super();
-		this.shortId = shortId;
-		this.ownerId = ownerId;
-		this.blobUrl = blobUrl;
-		this.timestamp = timestamp;
-		this.totalLikes = totalLikes;
-	}
+    private String _rid; // Cosmos generated unique id of item
+    private String _ts; // timestamp of the last update to the item
 
-	public Short(String shortId, String ownerId, String blobUrl) {
-		this( shortId, ownerId, blobUrl, System.currentTimeMillis(), 0);
-	}
-	
-	public String getShortId() {
-		return shortId;
-	}
+    @Id
+    String shortId;
+    String ownerId;
+    String blobUrl;
+    long timestamp;
+    int totalLikes;
 
-	public void setShortId(String shortId) {
-		this.shortId = shortId;
-	}
+    public Short() {
+    }
 
-	public String getOwnerId() {
-		return ownerId;
-	}
+    public Short(String shortId, String ownerId, String blobUrl, long timestamp, int totalLikes) {
+        super();
+        this.shortId = shortId;
+        this.ownerId = ownerId;
+        this.blobUrl = blobUrl;
+        this.timestamp = timestamp;
+        this.totalLikes = totalLikes;
+    }
 
-	public void setOwnerId(String ownerId) {
-		this.ownerId = ownerId;
-	}
+    public Short(String shortId, String ownerId, String blobUrl) {
+        this(shortId, ownerId, blobUrl, System.currentTimeMillis(), 0);
+    }
 
-	public String getBlobUrl() {
-		return blobUrl;
-	}
+    public String getShortId() {
+        return shortId;
+    }
 
-	public void setBlobUrl(String blobUrl) {
-		this.blobUrl = blobUrl;
-	}
+    public void setShortId(String shortId) {
+        this.shortId = shortId;
+    }
 
-	public long getTimestamp() {
-		return timestamp;
-	}
+    public String getOwnerId() {
+        return ownerId;
+    }
 
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
 
-	public int getTotalLikes() {
-		return totalLikes;
-	}
+    public String getBlobUrl() {
+        return blobUrl;
+    }
 
-	public void setTotalLikes(int totalLikes) {
-		this.totalLikes = totalLikes;
-	}
+    public void setBlobUrl(String blobUrl) {
+        this.blobUrl = blobUrl;
+    }
 
-	@Override
-	public String toString() {
-		return "Short [shortId=" + shortId + ", ownerId=" + ownerId + ", blobUrl=" + blobUrl + ", timestamp="
-				+ timestamp + ", totalLikes=" + totalLikes + "]";
-	}
-	
-	public Short copyWithLikes_And_Token( long totLikes) {
-		var urlWithToken = String.format("%s?token=%s", blobUrl, Token.get(blobUrl));
-		return new Short( shortId, ownerId, urlWithToken, timestamp, (int)totLikes);
-	}	
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public int getTotalLikes() {
+        return totalLikes;
+    }
+
+    public void setTotalLikes(int totalLikes) {
+        this.totalLikes = totalLikes;
+    }
+
+    @Override
+    public String toString() {
+        return "Short [shortId=" + shortId + ", ownerId=" + ownerId + ", blobUrl=" + blobUrl + ", timestamp="
+                + timestamp + ", totalLikes=" + totalLikes + "]";
+    }
+
+    public Short copyWithLikes_And_Token(long totLikes) {
+        var urlWithToken = String.format("%s?token=%s", blobUrl, Token.get(blobUrl));
+        return new Short(shortId, ownerId, urlWithToken, timestamp, (int) totLikes);
+    }
 }

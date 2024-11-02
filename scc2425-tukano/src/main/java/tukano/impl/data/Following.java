@@ -8,13 +8,16 @@ import jakarta.persistence.Id;
 @Entity
 public class Following{
 
+	private String _rid; // Cosmos generated unique id of item
+	private String _ts; // timestamp of the last update to the item
+
 	@Id 
 	String follower;
 	
 	@Id 
 	String followee;
 
-	Following() {}
+	public Following() {}
 
 	public Following(String follower, String followee) {
 		super();
