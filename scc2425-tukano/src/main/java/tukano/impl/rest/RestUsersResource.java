@@ -5,6 +5,8 @@ import tukano.api.User;
 import tukano.api.Users;
 import tukano.api.rest.RestUsers;
 import tukano.impl.JavaUsers;
+import utils.JSON;
+import utils.RedisCache;
 
 import java.util.List;
 
@@ -24,17 +26,42 @@ public class RestUsersResource extends RestResource implements RestUsers {
 
     @Override
     public User getUser(String name, String pwd) {
-        return super.resultOrThrow(impl.getUser(name, pwd));
+        try(var jedis = RedisCache.getCachePool().getResource()) {
+            var key = "user:" + name;
+            var value = jedis.get(key);
+            if(value != null) {
+                return JSON.decode(value, User.class);
+            }
+            var user = super.resultOrThrow(impl.getUser(name, pwd));
+            jedis.set(key, JSON.encode(user));
+            return user;
+        }
     }
 
     @Override
     public User updateUser(String name, String pwd, User user) {
-        return super.resultOrThrow(impl.updateUser(name, pwd, user));
+        try(var jedis = RedisCache.getCachePool().getResource()) {
+            var key = "user:" + name;
+            var value = jedis.get(key);
+            if(value != null) {
+                jedis.del(key);
+            }
+            var updatedUser = super.resultOrThrow(impl.updateUser(name, pwd, user));
+            jedis.set(key, JSON.encode(user));
+            return updatedUser;
+        }
     }
 
     @Override
     public User deleteUser(String name, String pwd) {
-        return super.resultOrThrow(impl.deleteUser(name, pwd));
+        try(var jedis = RedisCache.getCachePool().getResource()) {
+            var key = "user:" + name;
+            var value = jedis.get(key);
+            if(value != null) {
+                jedis.del(key);
+            }
+            return super.resultOrThrow(impl.deleteUser(name, pwd));
+        }
     }
 
     @Override
