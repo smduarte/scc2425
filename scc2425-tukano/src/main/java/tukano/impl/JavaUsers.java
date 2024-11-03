@@ -36,7 +36,7 @@ public class JavaUsers implements Users {
         if (badUserInfo(user))
             return error(BAD_REQUEST);
 
-        return errorOrValue(CosmosDB.insertOne(User.class, user), user.getUserId());
+        return errorOrValue(CosmosDB.insertOne(User.class, user), user.getId());
     }
 
     @Override
@@ -45,8 +45,8 @@ public class JavaUsers implements Users {
 
         if (userId == null)
             return error(BAD_REQUEST);
-        // userId is hardcoded FIND A WAY TO FIX THIS
-        return validatedUserOrError(CosmosDB.getOne(User.class, "userId", userId, User.class), pwd);
+        
+        return validatedUserOrError(CosmosDB.getOne(User.class, USER_ID_KEY, userId, User.class), pwd);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class JavaUsers implements Users {
             return error(BAD_REQUEST);
 
         return errorOrResult(
-                validatedUserOrError(CosmosDB.getOne(User.class, "userId", userId, User.class), pwd), user ->
+                validatedUserOrError(CosmosDB.getOne(User.class, USER_ID_KEY, userId, User.class), pwd), user ->
                         CosmosDB.updateOne(User.class, user.updateFrom(other))
         );
     }
@@ -69,7 +69,7 @@ public class JavaUsers implements Users {
         if (userId == null || pwd == null)
             return error(BAD_REQUEST);
 
-        return errorOrResult(validatedUserOrError(CosmosDB.getOne(User.class, "userId", userId, User.class), pwd), user -> {
+        return errorOrResult(validatedUserOrError(CosmosDB.getOne(User.class, USER_ID_KEY, userId, User.class), pwd), user -> {
 
             // Delete user shorts and related info asynchronously in a separate thread
             Executors.defaultThreadFactory().newThread(() -> {
@@ -107,6 +107,6 @@ public class JavaUsers implements Users {
     }
 
     private boolean badUpdateUserInfo(String userId, String pwd, User info) {
-        return (userId == null || pwd == null || info.getUserId() != null && !userId.equals(info.getUserId()));
+        return (userId == null || pwd == null || info.getId() != null && !userId.equals(info.getId()));
     }
 }

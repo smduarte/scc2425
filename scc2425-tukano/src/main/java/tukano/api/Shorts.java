@@ -73,7 +73,7 @@ public interface Shorts {
     Result<Void> follow(String userId1, String userId2, boolean isFollowing, String password);
 
     /**
-     * Retrieves the lost of users following a given user
+     * Retrieves the list of users following a given user
      *
      * @param userId   - the followed user
      * @param password - the password of the followed user

@@ -88,6 +88,17 @@ public class Short {
                 + timestamp + ", totalLikes=" + totalLikes + "]";
     }
 
+    public Short fromString(String str) {
+        String[] parts = str.split("," );
+        return new Short(
+                parts[0].split("=")[1],
+                parts[1].split("=")[1],
+                parts[2].split("=")[1],
+                Long.parseLong(parts[3].split("=")[1]),
+                Integer.parseInt(parts[4].split("=")[1])
+        );
+    }
+
     public Short copyWithLikes_And_Token(long totLikes) {
         var urlWithToken = String.format("%s?token=%s", blobUrl, Token.get(blobUrl));
         return new Short(shortId, ownerId, urlWithToken, timestamp, (int) totLikes);

@@ -64,5 +64,9 @@ public class Following {
         return "Following [follower=" + follower + ", followee=" + followee + "]";
     }
 
+    public Following fromString(String str) {
+        String[] parts = str.split("," );
+        return new Following(parts[0].split("=" )[1], parts[1].split("=" )[1]);
+    }
 
 }

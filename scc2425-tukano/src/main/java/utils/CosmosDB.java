@@ -13,17 +13,20 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import static tukano.api.Result.ErrorCode.errorCodeFromStatus;
+
 public class CosmosDB {
     private static final Logger Log = Logger.getLogger(CosmosDB.class.getName());
 
-    private static final String CONNECTION_URL = ""; // Replace with values from the Azure portal
-    private static final String DB_KEY = "";
+    private static final String CONNECTION_URL = "https://scc70730n70731.documents.azure.com:443/"; // Replace with values from the Azure portal
+    private static final String DB_KEY = "264wgYscqGUGj8AiNR5QF9jANa2AqwBANyLxdhq9aZYRqVJYGkd2C9hnoiiFabdacGvahaYpniK5ACDbWPwmdQ==";
     private static final String DB_NAME = "scc70730n70731";
 
     static CosmosClient client = new CosmosClientBuilder()
             .endpoint(CONNECTION_URL)
             .key(DB_KEY)
-            .directMode() // comment this if not to use direct mode
+            .gatewayMode()
+            // .directMode() // comment this if not to use direct mode
             .consistencyLevel(ConsistencyLevel.SESSION)
             .connectionSharingAcrossClientsEnabled(true)
             .contentResponseOnWriteEnabled(true) // On write, return the object written
@@ -266,15 +269,6 @@ public class CosmosDB {
             Log.severe("Error: " + x.getMessage());
             return Result.error(Result.ErrorCode.INTERNAL_ERROR);
         }
-    }
-
-    static Result.ErrorCode errorCodeFromStatus(int status) {
-        return switch (status) {
-            case 200 -> Result.ErrorCode.OK;
-            case 404 -> Result.ErrorCode.NOT_FOUND;
-            case 409 -> Result.ErrorCode.CONFLICT;
-            default -> Result.ErrorCode.INTERNAL_ERROR;
-        };
     }
 
 

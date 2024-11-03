@@ -1,5 +1,6 @@
 package tukano.impl.rest;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.inject.Singleton;
 import tukano.api.Short;
 import tukano.api.Shorts;
@@ -8,7 +9,10 @@ import tukano.impl.JavaShorts;
 import utils.JSON;
 import utils.RedisCache;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Singleton
 public class RestShortsResource extends RestResource implements RestShorts {
@@ -23,20 +27,20 @@ public class RestShortsResource extends RestResource implements RestShorts {
     public Short createShort(String userId, String password) {
         try (var jedis = RedisCache.getCachePool().getResource()) {
             // creates a short unconditionally
-            var shorty = super.resultOrThrow(impl.createShort(userId, password));
+            var createdShort = super.resultOrThrow(impl.createShort(userId, password));
 
             // shorts id belonging to the user
             var key = USER_SHORTS_KEY + userId;
             if (jedis.exists(key)) {
-                jedis.lpush(key, JSON.encode(shorty.getShortId()));
+                jedis.lpush(key, JSON.encode(createdShort.getShortId()));
             } else {
-                jedis.set(key, JSON.encode(shorty.getShortId()));
+                jedis.set(key, JSON.encode(createdShort.getShortId()));
             }
 
             //shorts on cache
-            var shortKey = SHORT_KEY + shorty.getShortId();
-            jedis.set(shortKey, JSON.encode(shorty));
-            return shorty;
+            var shortKey = SHORT_KEY + createdShort.getShortId();
+            jedis.set(shortKey, JSON.encode(createdShort));
+            return createdShort;
         }
     }
 
@@ -45,13 +49,12 @@ public class RestShortsResource extends RestResource implements RestShorts {
         try (var jedis = RedisCache.getCachePool().getResource()) {
             var key = SHORT_KEY + shortId;
             var value = jedis.get(key);
-            Short shorty = null;
             if (value != null) {
-                shorty = JSON.decode(value, Short.class);
+                Short decodedShort = JSON.decode(value, Short.class);
                 jedis.del(key);
+                var userShortsKey = USER_SHORTS_KEY + decodedShort.getOwnerId();
+                jedis.lrem(userShortsKey, 0, shortId);
             }
-            var userShortsKey = USER_SHORTS_KEY + shorty.getOwnerId();
-            jedis.lrem(userShortsKey, 0, shortId);
             super.resultOrThrow(impl.deleteShort(shortId, password));
         }
     }
@@ -140,11 +143,37 @@ public class RestShortsResource extends RestResource implements RestShorts {
 
     @Override
     public List<String> getFeed(String userId, String password) {
-        return super.resultOrThrow(impl.getFeed(userId, password));
+        try (var jedis = RedisCache.getCachePool().getResource()) {
+            var followedKeys = getFollowedKeys(userId);
+            List<String> feed = new ArrayList<>();
+            for (var followedKey : followedKeys) {
+                var followed = jedis.get(USER_SHORTS_KEY + followedKey);
+                if (followed != null) {
+                    var shorts = JSON.decode(followed, List.class);
+                    assert shorts != null;
+                    feed.addAll(shorts);
+                }
+            }
+            // if the list is empty, then gets the feed from the database and then caches the shorts
+            if (feed.isEmpty()) {
+                feed = super.resultOrThrow(impl.getFeed(userId, password));
+                for (var shortId : feed) {
+                    var shortKey = SHORT_KEY + shortId;
+                    var shorty = jedis.get(shortKey);
+                    if (shorty == null) {
+                        var toCacheShort = super.resultOrThrow(impl.getShort(shortId));
+                        jedis.set(shortKey, JSON.encode(toCacheShort));
+                    }
+                }
+            }
+
+            return feed;
+        }
     }
 
     @Override
     public void deleteAllShorts(String userId, String password, String token) {
+        super.resultOrThrow(impl.deleteAllShorts(userId, password, token));
         try (var jedis = RedisCache.getCachePool().getResource()) {
             var key = USER_SHORTS_KEY + userId;
             var userShorts = jedis.get(key);
@@ -161,7 +190,30 @@ public class RestShortsResource extends RestResource implements RestShorts {
                 jedis.del(key);
 
             }
-            super.resultOrThrow(impl.deleteAllShorts(userId, password, token));
+        }
+    }
+
+    /**
+     * Get all keys of users that are followed by userId
+     *
+     * @param userId user id
+     * @return set of keys
+     */
+    private static Set<String> getFollowedKeys(String userId) {
+        try (var jedis = RedisCache.getCachePool().getResource()) {
+            Set<String> keys = jedis.keys(USER_FOLLOWERS_KEY + "*" );
+            Set<String> result = new HashSet<>();
+            for (var key : keys) {
+                var value = jedis.get(key);
+                if (value != null) {
+                    var followers = JSON.decode(value, List.class);
+                    assert followers != null;
+                    if (followers.contains(userId)) {
+                        result.add(key);
+                    }
+                }
+            }
+            return result;
         }
     }
 }

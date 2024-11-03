@@ -12,7 +12,7 @@ public class User {
     private String _ts; // timestamp of the last update to the item
 
     @Id
-    private String userId;
+    private String id;
     private String pwd;
     private String email;
     private String displayName;
@@ -20,19 +20,19 @@ public class User {
     public User() {
     }
 
-    public User(String userId, String pwd, String email, String displayName) {
+    public User(String id, String pwd, String email, String displayName) {
         this.pwd = pwd;
         this.email = email;
-        this.userId = userId;
+        this.id = id;
         this.displayName = displayName;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getId() {
+        return id;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setId(String userId) {
+        this.id = userId;
     }
 
     public String getPwd() {
@@ -60,7 +60,7 @@ public class User {
     }
 
     public String userId() {
-        return userId;
+        return id;
     }
 
     public String pwd() {
@@ -77,15 +77,25 @@ public class User {
 
     @Override
     public String toString() {
-        return "User [userId=" + userId + ", pwd=" + pwd + ", email=" + email + ", displayName=" + displayName + "]";
+        return "User [userId=" + id + ", pwd=" + pwd + ", email=" + email + ", displayName=" + displayName + "]";
+    }
+
+    public User fromString(String str) {
+        String[] parts = str.split(",");
+        return new User(
+                parts[0].split("=")[1],
+                parts[1].split("=")[1],
+                parts[2].split("=")[1],
+                parts[3].split("=")[1]
+        );
     }
 
     public User copyWithoutPassword() {
-        return new User(userId, "", email, displayName);
+        return new User(id, "", email, displayName);
     }
 
     public User updateFrom(User other) {
-        return new User(userId,
+        return new User(id,
                 other.pwd != null ? other.pwd : pwd,
                 other.email != null ? other.email : email,
                 other.displayName != null ? other.displayName : displayName);

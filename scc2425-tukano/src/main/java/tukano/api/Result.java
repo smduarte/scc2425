@@ -115,7 +115,18 @@ public interface Result<T> {
      * NOT_FOUND - access occurred to something that does not exist
      * INTERNAL_ERROR - something unexpected happened
      */
-    enum ErrorCode {OK, CONFLICT, NOT_FOUND, BAD_REQUEST, FORBIDDEN, INTERNAL_ERROR, NOT_IMPLEMENTED, TIMEOUT}
+    enum ErrorCode {
+        OK, CONFLICT, NOT_FOUND, BAD_REQUEST, FORBIDDEN, INTERNAL_ERROR, NOT_IMPLEMENTED, TIMEOUT;
+
+        public static ErrorCode errorCodeFromStatus(int status) {
+            return switch (status) {
+                case 200 -> Result.ErrorCode.OK;
+                case 404 -> Result.ErrorCode.NOT_FOUND;
+                case 409 -> Result.ErrorCode.CONFLICT;
+                default -> Result.ErrorCode.INTERNAL_ERROR;
+            };
+        }
+    }
 }
 
 /**

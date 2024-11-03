@@ -56,6 +56,15 @@ public class Likes {
         return "Likes [userId=" + userId + ", shortId=" + shortId + ", ownerId=" + ownerId + "]";
     }
 
+    public Likes fromString(String str) {
+        String[] parts = str.split(",");
+        return new Likes(
+                parts[0].split("=")[1],
+                parts[1].split("=")[1],
+                parts[2].split("=")[1]
+        );
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(ownerId, shortId, userId);
