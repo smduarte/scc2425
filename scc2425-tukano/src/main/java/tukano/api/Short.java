@@ -2,6 +2,7 @@ package tukano.api;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import tukano.impl.Token;
 
 /**
@@ -13,6 +14,7 @@ import tukano.impl.Token;
  * A short is timestamped when it is created.
  */
 @Entity
+@Table(name = "short")
 public class Short {
 
     private String _rid; // Cosmos generated unique id of item
