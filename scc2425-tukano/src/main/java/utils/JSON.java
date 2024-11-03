@@ -7,9 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.logging.Logger;
 
 final public class JSON {
-    private static final Logger Log = Logger.getLogger(JSON.class.getName());
-
     final static ObjectMapper mapper = new ObjectMapper();
+    private static final Logger Log = Logger.getLogger(JSON.class.getName());
 
     synchronized public static String encode(Object obj) {
         try {

@@ -22,15 +22,14 @@ public class JavaShorts implements Shorts {
 
     private static Shorts instance;
 
+    private JavaShorts() {
+    }
+
     synchronized public static Shorts getInstance() {
         if (instance == null)
             instance = new JavaShorts();
         return instance;
     }
-
-    private JavaShorts() {
-    }
-
 
     @Override
     public Result<Short> createShort(String userId, String password) {
@@ -40,9 +39,9 @@ public class JavaShorts implements Shorts {
 
             var shortId = format("%s+%s", userId, UUID.randomUUID());
             var blobUrl = format("%s/%s/%s", TukanoRestServer.serverURI, Blobs.NAME, shortId);
-            var shrt = new Short(shortId, userId, blobUrl);
+            var shorty = new Short(shortId, userId, blobUrl);
 
-            return errorOrValue(CosmosDB.insertOne(Short.class, shrt), s -> s.copyWithLikes_And_Token(0));
+            return errorOrValue(CosmosDB.insertOne(Short.class, shorty), s -> s.copyWithLikes_And_Token(0));
         });
     }
 
@@ -56,7 +55,7 @@ public class JavaShorts implements Shorts {
         var query = format("SELECT count(*) FROM Likes l WHERE l.shortId = '%s'", shortId);
         var likes = CosmosDB.sql(query, Long.class, Likes.class);
         //Sort id is hardcoded FIND A WAY TO FIX THIS
-        return errorOrValue(CosmosDB.getOne(Short.class, "shortId", shortId, Short.class), shrt -> shrt.copyWithLikes_And_Token(likes.value().get(0)));
+        return errorOrValue(CosmosDB.getOne(Short.class, "shortId", shortId, Short.class), shorty -> shorty.copyWithLikes_And_Token(likes.value().get(0)));
     }
 
 
@@ -64,16 +63,16 @@ public class JavaShorts implements Shorts {
     public Result<Void> deleteShort(String shortId, String password) {
         Log.info(() -> format("deleteShort : shortId = %s, pwd = %s\n", shortId, password));
 
-        return errorOrResult(getShort(shortId), shrt ->
-                errorOrResult(okUser(shrt.getOwnerId(), password), user ->
+        return errorOrResult(getShort(shortId), shorty ->
+                errorOrResult(okUser(shorty.getOwnerId(), password), user ->
                         CosmosDB.transaction(tr -> {
 
-                            CosmosDB.deleteOne(Short.class, shrt);
+                            CosmosDB.deleteOne(Short.class, shorty);
 
                             var query = format("DELETE Likes l WHERE l.shortId = '%s'", shortId);
                             CosmosDB.sql(query, Void.class, Likes.class);
 
-                            JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get());
+                            JavaBlobs.getInstance().delete(shorty.getBlobUrl(), Token.get());
                         })));
     }
 
@@ -109,8 +108,8 @@ public class JavaShorts implements Shorts {
         Log.info(() -> format("like : shortId = %s, userId = %s, isLiked = %s, pwd = %s\n", shortId, userId, isLiked, password));
 
 
-        return errorOrResult(getShort(shortId), shrt -> {
-            var l = new Likes(userId, shortId, shrt.getOwnerId());
+        return errorOrResult(getShort(shortId), shorty -> {
+            var l = new Likes(userId, shortId, shorty.getOwnerId());
             return errorOrVoid(okUser(userId, password), isLiked ? CosmosDB.insertOne(Likes.class, l) : CosmosDB.deleteOne(Likes.class, l));
         });
     }
@@ -119,11 +118,11 @@ public class JavaShorts implements Shorts {
     public Result<List<String>> likes(String shortId, String password) {
         Log.info(() -> format("likes : shortId = %s, pwd = %s\n", shortId, password));
 
-        return errorOrResult(getShort(shortId), shrt -> {
+        return errorOrResult(getShort(shortId), shorty -> {
 
             var query = format("SELECT l.userId FROM Likes l WHERE l.shortId = '%s'", shortId);
 
-            return errorOrValue(okUser(shrt.getOwnerId(), password), CosmosDB.sql(query, String.class, Likes.class));
+            return errorOrValue(okUser(shorty.getOwnerId(), password), CosmosDB.sql(query, String.class, Likes.class));
         });
     }
 

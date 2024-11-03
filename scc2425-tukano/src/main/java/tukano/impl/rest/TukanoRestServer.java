@@ -14,18 +14,34 @@ import java.util.logging.Logger;
 
 
 public class TukanoRestServer extends Application {
+    public static final int PORT = 8080;
+    static final String INET_ADDR_ANY = "0.0.0.0";
     final private static Logger Log = Logger.getLogger(TukanoRestServer.class.getName());
-
-    static final String INETADDR_ANY = "0.0.0.0";
+    public static String serverURI;
     static String SERVER_BASE_URI = "http://%s:%s/rest";
 
-
-    public static final int PORT = 8080;
-
-    public static String serverURI;
+    static {
+        System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s" );
+    }
 
     private final Set<Object> singletons = new HashSet<>();
     private final Set<Class<?>> resources = new HashSet<>();
+
+    protected TukanoRestServer() {
+        serverURI = String.format(SERVER_BASE_URI, IP.hostname(), PORT);
+        resources.add(RestBlobsResource.class);
+        resources.add(RestUsersResource.class);
+        resources.add(RestShortsResource.class);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Args.use(args);
+
+        Token.setSecret(Args.valueOf("-secret", "" ));
+//		Props.load( Args.valueOf("-props", "").split(","));
+
+        new TukanoRestServer().start();
+    }
 
     @Override
     public Set<Class<?>> getClasses() {
@@ -37,18 +53,6 @@ public class TukanoRestServer extends Application {
         return singletons;
     }
 
-    static {
-        System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s");
-    }
-
-    protected TukanoRestServer() {
-        serverURI = String.format(SERVER_BASE_URI, IP.hostname(), PORT);
-        resources.add(RestBlobsResource.class);
-        resources.add(RestUsersResource.class);
-        resources.add(RestShortsResource.class);
-    }
-
-
     protected void start() throws Exception {
 
         ResourceConfig config = new ResourceConfig();
@@ -57,18 +61,8 @@ public class TukanoRestServer extends Application {
         config.register(RestUsersResource.class);
         config.register(RestShortsResource.class);
 
-        JdkHttpServerFactory.createHttpServer(URI.create(serverURI.replace(IP.hostname(), INETADDR_ANY)), config);
+        JdkHttpServerFactory.createHttpServer(URI.create(serverURI.replace(IP.hostname(), INET_ADDR_ANY)), config);
 
         Log.info(String.format("Tukano Server ready @ %s\n", serverURI));
-    }
-
-
-    public static void main(String[] args) throws Exception {
-        Args.use(args);
-
-        Token.setSecret(Args.valueOf("-secret", ""));
-//		Props.load( Args.valueOf("-props", "").split(","));
-
-        new TukanoRestServer().start();
     }
 }

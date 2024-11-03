@@ -16,21 +16,20 @@ import static tukano.api.Result.error;
 
 public class JavaBlobs implements Blobs {
 
-    private static Blobs instance;
     private static final Logger Log = Logger.getLogger(JavaBlobs.class.getName());
-
-    public String baseURI;
+    private static Blobs instance;
     private final BlobStorage storage;
+    public String baseURI;
+
+    private JavaBlobs() {
+        storage = new CloudStorage();
+        baseURI = String.format("%s/%s/", TukanoRestServer.serverURI, Blobs.NAME);
+    }
 
     synchronized public static Blobs getInstance() {
         if (instance == null)
             instance = new JavaBlobs();
         return instance;
-    }
-
-    private JavaBlobs() {
-        storage = new CloudStorage();
-        baseURI = String.format("%s/%s/", TukanoRestServer.serverURI, Blobs.NAME);
     }
 
     @Override

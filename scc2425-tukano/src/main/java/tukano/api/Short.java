@@ -6,19 +6,16 @@ import jakarta.persistence.Table;
 import tukano.impl.Token;
 
 /**
- * Represents a Short video uploaded by an user.
+ * Represents a Short video uploaded by a user.
  * <p>
- * A short has an unique shortId and is owned by a given user;
- * Comprises of a short video, stored as a binary blob at some bloburl;.
+ * A short has a unique shortId and is owned by a given user;
+ * Comprises a short video, stored as a binary blob at some blob URL;
  * A post also has a number of likes, which can increase or decrease over time. It is the only piece of information that is mutable.
  * A short is timestamped when it is created.
  */
 @Entity
-@Table(name = "short")
+@Table(name = "short" )
 public class Short {
-
-    private String _rid; // Cosmos generated unique id of item
-    private String _ts; // timestamp of the last update to the item
 
     @Id
     String shortId;
@@ -26,6 +23,8 @@ public class Short {
     String blobUrl;
     long timestamp;
     int totalLikes;
+    private String _rid; // Cosmos generated unique id of item
+    private String _ts; // timestamp of the last update to the item
 
     public Short() {
     }

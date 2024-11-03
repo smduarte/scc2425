@@ -11,15 +11,15 @@ import jakarta.ws.rs.ext.Provider;
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
-	@Override
-	public Response toResponse(Throwable ex) {
+    @Override
+    public Response toResponse(Throwable ex) {
 
-		if (ex instanceof WebApplicationException) {
-			return ((WebApplicationException) ex).getResponse();
-		}
+        if (ex instanceof WebApplicationException) {
+            return ((WebApplicationException) ex).getResponse();
+        }
 
-		ex.printStackTrace();
+        ex.printStackTrace();
 
-		return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).type(MediaType.APPLICATION_JSON).build();
-	}
+        return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).type(MediaType.APPLICATION_JSON).build();
+    }
 }

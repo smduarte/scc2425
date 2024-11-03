@@ -13,7 +13,7 @@ public class RedisCache {
     private static JedisPool instance;
 
     public synchronized static JedisPool getCachePool() {
-        if( instance != null)
+        if (instance != null)
             return instance;
 
         var poolConfig = new JedisPoolConfig();

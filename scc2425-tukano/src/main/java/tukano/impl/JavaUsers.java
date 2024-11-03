@@ -20,13 +20,13 @@ public class JavaUsers implements Users {
 
     private static Users instance;
 
+    private JavaUsers() {
+    }
+
     synchronized public static Users getInstance() {
         if (instance == null)
             instance = new JavaUsers();
         return instance;
-    }
-
-    private JavaUsers() {
     }
 
     @Override

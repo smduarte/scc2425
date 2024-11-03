@@ -34,8 +34,9 @@ public interface Blobs {
      * Deletes a short video blob resource.
      *
      * @param blobId the id of the blob;
-     * @return (OK, void), if the blob exists and was deleted;
-     * NOT_FOUND, if no blob matches the provided blobId
+     * @return (OK, void) - if the blob exists and was deleted;
+     * <p>
+     * NOT_FOUND -  if no blob matches the provided blobId
      */
     Result<Void> delete(String blobId, String token);
 
@@ -43,7 +44,7 @@ public interface Blobs {
     /**
      * Deletes all short video blob resources from a given userId.
      *
-     * @param userId the id of the owner of the blobs;
+     * @param userId the owner's id of the blobs;
      */
     Result<Void> deleteAllBlobs(String userId, String token);
 }

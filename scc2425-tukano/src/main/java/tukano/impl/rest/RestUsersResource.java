@@ -78,6 +78,7 @@ public class RestUsersResource extends RestResource implements RestUsers {
     /**
      * TODO needs revision, its going to both cache and db for data,
      *  strategy will be either complex or have data duplication on cache and even then it can be inconsistent
+     *
      * @param pattern
      * @return
      */
@@ -89,7 +90,8 @@ public class RestUsersResource extends RestResource implements RestUsers {
 
             List<User> users = null;
             if (value != null) {
-                users = JSON.decode(value, new TypeReference<List<User>>() {});
+                users = JSON.decode(value, new TypeReference<List<User>>() {
+                });
             }
             var dbUsers = super.resultOrThrow(impl.searchUsers(pattern));
             // merge both lists

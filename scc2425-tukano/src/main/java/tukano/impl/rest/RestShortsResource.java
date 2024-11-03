@@ -13,12 +13,11 @@ import java.util.List;
 @Singleton
 public class RestShortsResource extends RestResource implements RestShorts {
 
+    static final Shorts impl = JavaShorts.getInstance();
     private static final String USER_SHORTS_KEY = "userShorts:";
     private static final String SHORT_KEY = "short:";
     private static final String USER_FOLLOWERS_KEY = "followers:";
     private static final String SHORT_LIKES_KEY = "likes:";
-
-    static final Shorts impl = JavaShorts.getInstance();
 
     @Override
     public Short createShort(String userId, String password) {
