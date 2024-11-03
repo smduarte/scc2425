@@ -1,9 +1,13 @@
 package main.java.utils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 
+import com.azure.cosmos.models.CosmosBatch;
 import main.java.tukano.api.Result;
+import main.java.tukano.api.User;
 
 public class CosmosDB {
 
@@ -33,7 +37,8 @@ public class CosmosDB {
         return Result.errorOrValue(CosmosNoSQL.getInstance().insertOne(obj), obj);
     }
 
-    public static Result<Void> transaction(List<Runnable> operations, String partitionKeyValue) {
-        return CosmosNoSQL.getInstance().transaction(operations, partitionKeyValue);
+    public static <T> Result<T> runOperations(List<Runnable> operations) {
+        return CosmosNoSQL.getInstance().runOperations(operations);
     }
+
 }

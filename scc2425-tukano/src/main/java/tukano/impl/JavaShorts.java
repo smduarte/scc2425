@@ -10,17 +10,20 @@ import static main.java.tukano.api.Result.ok;
 import static main.java.utils.CosmosDB.getOne;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import main.java.tukano.api.Blobs;
-import main.java.tukano.api.Result;
+import com.azure.cosmos.models.CosmosBatch;
+import com.azure.cosmos.models.PartitionKey;
+import main.java.tukano.api.*;
 import main.java.tukano.api.Short;
-import main.java.tukano.api.Shorts;
-import main.java.tukano.api.User;
 import main.java.tukano.impl.data.Following;
+import main.java.tukano.impl.data.FollowingCosmos;
 import main.java.tukano.impl.data.Likes;
+import main.java.tukano.impl.data.LikesCosmos;
 import main.java.tukano.impl.rest.TukanoRestServer;
 import main.java.utils.CosmosDB;
 import main.java.utils.JSON;
@@ -48,12 +51,13 @@ public class JavaShorts implements Shorts {
 		Log.info(() -> format("createShort : userId = %s, pwd = %s\n", userId, password));
 
 		return errorOrResult( okUser(userId, password), user -> {
-			
-			var shortId = format("%s+%s", userId, UUID.randomUUID());
-			var blobUrl = format("%s/%s/%s", TukanoRestServer.serverURI, Blobs.NAME, shortId); 
-			var shrt = new Short(shortId, userId, blobUrl);
 
-			return errorOrValue(CosmosDB.insertOne(shrt), s -> s.copyWithLikes_And_Token(0));
+			var shortId = format("%s+%s", userId, UUID.randomUUID());
+			var blobUrl = format("%s/%s/%s", TukanoRestServer.serverURI, Blobs.NAME, shortId);
+			var shrt = new Short(shortId, userId, blobUrl);
+			ShortCosmos shrtCosmos = new ShortCosmos(shrt);
+
+			return errorOrValue(CosmosDB.insertOne(shrtCosmos), s -> s.copyWithLikes_And_Token(0));
 		});
 	}
 
@@ -64,25 +68,26 @@ public class JavaShorts implements Shorts {
 		if( shortId == null )
 			return error(BAD_REQUEST);
 
+		Log.info( () -> format("Checking if short %s is in cache", shortId));
 		try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-		 	// Check if the short is in cache
+
 			String cachedShort = jedis.get("short:" + shortId);
 			if (cachedShort != null) {
-				// Short found in cache, let's decode and return
-				return ok(JSON.decode(cachedShort, Short.class));
+				Log.info( () -> format("Short %s was found in cache", shortId));
+
+				return ok(getShortWithLikes(JSON.decode(cachedShort, Short.class)));
+
 			} else {
-				var query = format("SELECT count(*) FROM Likes l WHERE l.shortId = '%s'", shortId);
-				var likes = CosmosDB.sql(query, Long.class);
-				Result<Short> result = errorOrValue(getOne(shortId, Short.class), shrt -> shrt.copyWithLikes_And_Token( likes.get(0)));
+				Log.info( () -> format("Short %s was not found in cache", shortId));
+
+				Result<Short> result = errorOrValue(getOne(shortId, Short.class), this::getShortWithLikes);
 
 				if (result.isOK()) {
-					jedis.set("short:" + shortId, JSON.encode(result.value()));
-					jedis.expire("short:" + shortId, 3600); // 1 hour expiration
+					jedis.setex("short:" + shortId, 3600, JSON.encode(result.value()));
 				}
 				return result;
 			}
 		}
-
 		}
 
 	@Override
@@ -92,23 +97,30 @@ public class JavaShorts implements Shorts {
 			return errorOrResult( okUser( shrt.getOwnerId(), password), user -> {
 				List<Runnable> operations = new ArrayList<>();
 
-				operations.add(() -> CosmosDB.deleteOne(shrt));
-
 				// Delete Likes associated with the Short
-				var query = format("SELECT * FROM Likes l WHERE l.shortId = '%s'", shortId);
+				var query = format("SELECT * FROM Likes l WHERE l.shortId = '%s' AND l.userId != null", shortId);
 				var deleteLikesResult = CosmosDB.sql(query, Likes.class);
 
-				for (Likes like : deleteLikesResult) {
-					operations.add(() -> CosmosDB.deleteOne(like));
+				for (Likes l : deleteLikesResult) {
+					LikesCosmos lCosmos = new LikesCosmos(l);
+					operations.add(() -> CosmosDB.deleteOne(lCosmos));
 				}
-				// Step 5: Delete the blob associated with the Short
-				operations.add(() -> JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get()));
+
+				operations.add(() -> {
+					JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get());
+				});
 
 				// Clear cache
-				try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-					jedis.del("short:" + shortId);
-				}
-				return CosmosDB.transaction(operations, shortId);
+				operations.add(() -> {
+					try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+						jedis.del("short:" + shortId);
+					}
+				});
+
+				ShortCosmos shrtCosmos = new ShortCosmos(shrt);
+				operations.add(() -> CosmosDB.deleteOne(shrtCosmos));
+
+				return CosmosDB.runOperations(operations);
 			});
 		});
 	}
@@ -118,17 +130,25 @@ public class JavaShorts implements Shorts {
 		Log.info(() -> format("getShorts : userId = %s\n", userId));
 
 		var query = format("SELECT s.shortId FROM Short s WHERE s.ownerId = '%s'", userId);
-		return errorOrValue( okUser(userId), CosmosDB.sql( query, String.class));
+
+		List<String> arr = new ArrayList<>();
+		List<Short> results = CosmosDB.sql( query, Short.class);
+
+        for (Short shrt : results) {
+            arr.add(shrt.getShortId());
+        }
+
+		return errorOrValue( okUser(userId), arr);
 	}
 
 	@Override
 	public Result<Void> follow(String userId1, String userId2, boolean isFollowing, String password) {
 		Log.info(() -> format("follow : userId1 = %s, userId2 = %s, isFollowing = %s, pwd = %s\n", userId1, userId2, isFollowing, password));
-	
-		
+
 		return errorOrResult( okUser(userId1, password), user -> {
-			var f = new Following(userId1, userId2);
-			return errorOrVoid( okUser( userId2), isFollowing ? CosmosDB.insertOne( f ) : CosmosDB.deleteOne( f ));
+			Following f = new Following(userId1, userId2);
+			FollowingCosmos fCosmos = new FollowingCosmos(f);
+			return errorOrVoid( okUser( userId2), isFollowing ? CosmosDB.insertOne( fCosmos ) : CosmosDB.deleteOne( fCosmos ));
 		});			
 	}
 
@@ -136,8 +156,15 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> followers(String userId, String password) {
 		Log.info(() -> format("followers : userId = %s, pwd = %s\n", userId, password));
 
-		var query = format("SELECT f.follower FROM Following f WHERE f.followee = '%s'", userId);		
-		return errorOrValue( okUser(userId, password), CosmosDB.sql(query, String.class));
+		var query = format("SELECT f.follower FROM Following f WHERE f.followee = '%s' AND f.follower != null", userId);
+		List<Following> followers = CosmosDB.sql(query, Following.class);
+		List<String> results = new ArrayList<>();
+
+		for(Following f : followers) {
+			results.add(f.getFollower());
+		}
+
+		return errorOrValue( okUser(userId, password), results);
 	}
 
 	@Override
@@ -146,8 +173,9 @@ public class JavaShorts implements Shorts {
 
 		
 		return errorOrResult( getShort(shortId), shrt -> {
-			var l = new Likes(userId, shortId, shrt.getOwnerId());
-			return errorOrVoid( okUser( userId, password), isLiked ? CosmosDB.insertOne( l ) : CosmosDB.deleteOne( l ));
+			Likes l = new Likes(userId, shortId, shrt.getOwnerId());
+			LikesCosmos lCosmos = new LikesCosmos(l);
+			return errorOrVoid( okUser( userId, password), isLiked ? CosmosDB.insertOne( lCosmos ) : CosmosDB.deleteOne( lCosmos ));
 		});
 	}
 
@@ -157,9 +185,14 @@ public class JavaShorts implements Shorts {
 
 		return errorOrResult( getShort(shortId), shrt -> {
 			
-			var query = format("SELECT l.userId FROM Likes l WHERE l.shortId = '%s'", shortId);					
+			var query = format("SELECT l.userId FROM Likes l WHERE l.shortId = '%s' AND l.userId != null", shortId);
+			List<Likes> likes = CosmosDB.sql(query, Likes.class);
+			List<String> results = new ArrayList<>();
+			for(Likes l : likes) {
+				results.add(l.getUserId());
+			}
 			
-			return errorOrValue( okUser( shrt.getOwnerId(), password ), CosmosDB.sql(query, String.class));
+			return errorOrValue( okUser( shrt.getOwnerId(), password ),results);
 		});
 	}
 
@@ -167,15 +200,28 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> getFeed(String userId, String password) {
 		Log.info(() -> format("getFeed : userId = %s, pwd = %s\n", userId, password));
 
-		final var QUERY_FMT = """
-				SELECT s.shortId, s.timestamp FROM Short s WHERE	s.ownerId = '%s'				
-				UNION			
-				SELECT s.shortId, s.timestamp FROM Short s, Following f 
-					WHERE 
-						f.followee = s.ownerId AND f.follower = '%s' 
-				ORDER BY s.timestamp DESC""";
+		var ownerQuery = format("SELECT s.shortId, s.timestamp FROM Short s WHERE s.ownerId = '%s' AND s.shortId != null AND s.timestamp != 0 ORDER BY s.timestamp DESC", userId);
+		List<Short> shortsOwner = CosmosDB.sql(ownerQuery, Short.class);
 
-		return errorOrValue( okUser( userId, password), CosmosDB.sql( format(QUERY_FMT, userId, userId), String.class));
+		var followeeQuery = format("SELECT f.followee FROM Following f WHERE f.follower = '%s' AND f.followee != null", userId);
+		List<Following> followeeIds = CosmosDB.sql(followeeQuery, Following.class);
+
+		List<Short> shortsFollowing = new ArrayList<>();
+		for (Following followee : followeeIds) {
+			var followingQuery = format("SELECT s.shortId, s.timestamp FROM Short s WHERE s.ownerId = '%s' AND s.shortId != null ORDER BY s.timestamp DESC", followee.getFollowee());
+			shortsFollowing.addAll(CosmosDB.sql(followingQuery, Short.class));
+		}
+		List<String> results = new ArrayList<>();
+
+		List<Short> combinedShorts = new ArrayList<>(shortsOwner);
+		combinedShorts.addAll(shortsFollowing);
+		combinedShorts.sort((s1, s2) -> Long.compare(s2.getTimestamp(), s1.getTimestamp()));
+
+		for(Short shrt: combinedShorts) {
+			results.add(format("Short %s with timestamp %s", shrt.getShortId(), shrt.getTimestamp()));
+		}
+
+		return errorOrValue( okUser( userId, password), results);
 	}
 		
 	protected Result<User> okUser( String userId, String pwd) {
@@ -188,6 +234,12 @@ public class JavaShorts implements Shorts {
 			return ok();
 		else
 			return error( res.error() );
+	}
+
+	private Short getShortWithLikes(Short s) {
+		var query = format("SELECT VALUE COUNT(1) FROM Likes l WHERE l.shortId = '%s' AND l.userId != null", s.getShortId());
+		var likes = CosmosDB.sql(query, Long.class);
+		return s.copyWithLikes_And_Token( likes.get(0));
 	}
 	
 	@Override
@@ -202,30 +254,38 @@ public class JavaShorts implements Shorts {
 		}
 		List<Runnable> operations = new ArrayList<>();
 
-		var shortsQuery = format("SELECT * FROM Short s WHERE s.ownerId = '%s'", userId);
-		var followersQuery = format("DELETE Following f WHERE f.follower = '%s' OR f.followee = '%s'", userId, userId);
-		var likesQuery = format("DELETE Likes l WHERE l.ownerId = '%s' OR l.userId = '%s'", userId, userId);
-
-		List<Short> shortsList = CosmosDB.sql(shortsQuery, Short.class);
-		for (Short shrt : shortsList) {
-			operations.add(() -> CosmosDB.deleteOne(shrt));
-			// Clear cache for each deleted short
-			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-				jedis.del("short:" + shrt.getShortId());
-			}
-		}
+		var shortsQuery = format("SELECT * FROM Short s WHERE s.ownerId = '%s' AND s.blobUrl != null", userId);
+		var followersQuery = format("SELECT * FROM Following f WHERE f.follower = '%s' AND f.followee != null OR f.followee = '%s' AND f.follower != null", userId, userId);
+		var likesQuery = format("SELECT * FROM Likes l WHERE l.ownerId = '%s' AND l.userId != null OR l.userId = '%s' AND l.ownerId !=null", userId, userId);
 
 		List<Following> followingList = CosmosDB.sql(followersQuery, Following.class);
 		for (Following follow : followingList) {
-			operations.add(() -> CosmosDB.deleteOne(follow));
+			FollowingCosmos fCosmos = new FollowingCosmos(follow);
+			operations.add(() -> CosmosDB.deleteOne(fCosmos));
 		}
 
 		List<Likes> likesList = CosmosDB.sql(likesQuery, Likes.class);
-		for (Likes like : likesList) {
-			operations.add(() -> CosmosDB.deleteOne(like));
+		for (Likes l : likesList) {
+			LikesCosmos lCosmos = new LikesCosmos(l);
+			operations.add(() -> CosmosDB.deleteOne(lCosmos));
 		}
 
-		return CosmosDB.transaction(operations, userId);
+		List<Short> shortsList = CosmosDB.sql(shortsQuery, Short.class);
+		for (Short shrt : shortsList) {
+			operations.add(() -> JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get()));
+
+			// Clear cache for each deleted short
+			operations.add(() -> {
+				try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+					jedis.del("short:" + shrt.getShortId());
+				}
+			});
+
+			ShortCosmos shrtCosmos = new ShortCosmos(shrt);
+			operations.add(() -> CosmosDB.deleteOne(shrtCosmos));
+		}
+
+		return CosmosDB.runOperations(operations);
 	}
 	
 }

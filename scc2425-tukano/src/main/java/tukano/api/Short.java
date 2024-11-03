@@ -2,7 +2,10 @@ package main.java.tukano.api;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import main.java.tukano.impl.JavaUsers;
 import main.java.tukano.impl.Token;
+
+import java.util.logging.Logger;
 
 /**
  * Represents a Short video uploaded by an user.
@@ -15,6 +18,8 @@ import main.java.tukano.impl.Token;
  */
 @Entity
 public class Short {
+
+	private static Logger Log = Logger.getLogger(Short.class.getName());
 	
 	@Id
 	String shortId;

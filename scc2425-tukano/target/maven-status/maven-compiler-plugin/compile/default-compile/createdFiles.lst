@@ -9,6 +9,7 @@ main/test/tukano/clients/rest/RestShortsClient.class
 main/java/tukano/impl/data/Likes.class
 main/java/utils/Props.class
 main/java/tukano/impl/JavaUsers.class
+main/java/tukano/impl/data/FollowingCosmos.class
 main/test/tukano/clients/rest/RestShortsClient$2.class
 main/java/utils/Random.class
 main/java/utils/RedisCache.class
@@ -28,6 +29,7 @@ main/java/tukano/impl/rest/utils/GenericExceptionMapper.class
 main/java/tukano/api/Result.class
 main/java/utils/Args.class
 main/java/tukano/impl/JavaShorts.class
+main/java/tukano/api/UserCosmos.class
 main/java/tukano/api/Shorts.class
 main/java/utils/Hex.class
 main/test/tukano/clients/rest/RestBlobsClient.class
@@ -44,6 +46,7 @@ main/test/tukano/clients/rest/RestShortsClient$4.class
 main/java/tukano/impl/storage/FilesystemStorage.class
 main/java/tukano/impl/JavaBlobs.class
 main/java/utils/Sleep.class
+main/java/tukano/impl/data/LikesCosmos.class
 main/java/tukano/impl/rest/RestShortsResource.class
 main/java/utils/StorageFactory.class
 main/test/tukano/clients/rest/RestClient.class
@@ -53,6 +56,7 @@ main/java/tukano/impl/HibernateUsers.class
 main/java/tukano/api/ErrorResult.class
 main/java/utils/IO.class
 main/test/tukano/clients/rest/RestShortsClient$3.class
+main/java/tukano/api/ShortCosmos.class
 main/java/tukano/impl/rest/RestBlobsResource.class
 main/java/tukano/api/User.class
 main/java/tukano/impl/HibernateShorts.class

@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import main.java.tukano.api.Result;
 import main.java.tukano.api.User;
+import main.java.tukano.api.UserCosmos;
 import main.java.tukano.api.Users;
 import main.java.utils.CosmosDB;
 import main.java.utils.JSON;
@@ -41,7 +42,9 @@ public class JavaUsers implements Users {
 		if( badUserInfo( user ) )
 				return error(BAD_REQUEST);
 
-		return errorOrValue( CosmosDB.insertOne( user), user.getUserId() );
+		UserCosmos cosmosUser = new UserCosmos(user);
+
+		return errorOrValue( CosmosDB.insertOne( cosmosUser), cosmosUser.getUserId() );
 	}
 
 	@Override
@@ -51,21 +54,24 @@ public class JavaUsers implements Users {
 		if (userId == null)
 			return error(BAD_REQUEST);
 
+		Log.info( () -> format("Checking if user %s is in cache", userId));
 		try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+
 			// Check if the user is in cache
 			String cachedUser = jedis.get("user:" + userId);
 			if (cachedUser != null) {
 				// User found in cache, let's decode and return
 				User userFromCache = JSON.decode(cachedUser, User.class);
+				Log.info( () -> format("User %s was in cache", userId));
 				return validatedUserOrError(ok(userFromCache), pwd);
 			} else {
+				Log.info( () -> format("User %s was not found in cache", userId));
 				// User not in cache, fetch from database
 				Result<User> result = validatedUserOrError(CosmosDB.getOne(userId, User.class), pwd);
 
 				// Cache the user with 1 hour time expiration (we can change)
 				if (result.isOK()) {
-					jedis.set("user:" + userId, JSON.encode(result.value()));
-					jedis.expire("user:" + userId, 3600);
+					jedis.setex("user:" + userId, 3600, JSON.encode(result.value()));
 				}
 				return result;
 			}
@@ -80,12 +86,13 @@ public class JavaUsers implements Users {
 			return error(BAD_REQUEST);
 
 		return errorOrResult( validatedUserOrError(CosmosDB.getOne( userId, User.class), pwd), user -> {
-			Result<User> updatedUser = CosmosDB.updateOne(user.updateFrom(other));
+			User newUser = user.updateFrom(other);
+			UserCosmos cosmosUser = new UserCosmos(newUser);
+			Result<User> updatedUser = CosmosDB.updateOne(cosmosUser);
 
 			// Update the cache again with 1 hour expiration
 			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-				jedis.set("user:" + userId, JSON.encode(updatedUser));
-				jedis.expire("user:" + userId, 3600); // 1 hour expiration
+				jedis.setex("user:" + userId, 3600, JSON.encode(newUser)); // 1 hour expiration
 			}
 			return updatedUser;
 		});
@@ -108,10 +115,10 @@ public class JavaUsers implements Users {
 
 			// Remove from cache
 			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-				jedis.del("user" + userId);
+				jedis.del("user:" + userId);
 			}
-
-			return CosmosDB.deleteOne( user);
+			UserCosmos cosmosUser = new UserCosmos(user);
+			return CosmosDB.deleteOne( cosmosUser);
 		});
 	}
 
@@ -120,6 +127,7 @@ public class JavaUsers implements Users {
 		Log.info( () -> format("searchUsers : patterns = %s\n", pattern));
 
 		var query = format("SELECT * FROM User u WHERE UPPER(u.userId) LIKE '%%%s%%'", pattern.toUpperCase());
+		Log.info( () -> format("searchUsers : patterns = %s\n", query));
 		var hits = CosmosDB.sql(query, User.class)
 				.stream()
 				.map(User::copyWithoutPassword)

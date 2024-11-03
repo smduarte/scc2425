@@ -17,8 +17,8 @@ import main.java.tukano.api.Result;
 import main.java.utils.Hash;
 
 public class BlobSystemStorage implements BlobStorage {
-    String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=scc212270663;AccountKey=N3VETIuitF5wTw2c2NHFiJnXSvuQqOLT68mXinwolfTRezxqY5VntPdt0e3zh0dO7LYB4NgOUxEO+ASt9HZDZQ==;EndpointSuffix=core.windows.net";
-    String containerName = "images";
+    String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=st7066270663;AccountKey=BQp5y2hpOFd6oDJRIpt4C/i0hMnGnVDwTbqWqHg2gMFuInxxWkQ2YomHeGmIluf/ZA5v+2F4AMlM+AStg9AZyQ==;EndpointSuffix=core.windows.net";
+    String containerName = "blobs";
 
     private BlobContainerClient containerClient;
 

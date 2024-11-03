@@ -14,16 +14,17 @@ import com.azure.cosmos.models.CosmosBatch;
 import com.azure.cosmos.models.CosmosBatchResponse;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import main.java.tukano.api.Result.ErrorCode;
 
 public class CosmosNoSQL {
 
-    private static final String CONNECTION_URL = "https://scc242570663.documents.azure.com:443/"; // replace with your own
-    private static final String DB_KEY = "a7f5jR6cQUdwKkbLkiiwr1W0AGwa7wtugj2NFMWIx8uxOzRLh4Lg4mn1oMNyArIswm700HvuFOqIACDbEWMVng==";
-    private static final String DB_NAME = "scc2425";
-    private static final String CONTAINER = "users";
+    private static final String CONNECTION_URL = "https://cosmos7066270663.documents.azure.com:443/"; // replace with your own
+    private static final String DB_KEY = "ZU8GyphhOkRCUcqFlEUrDdhqDuILhyX9tRzbWmr0hbHkZwahcvUZF5P7BovcGPrsEAuiKYarckNTACDb80vegQ==";
+    private static final String DB_NAME = "scc7066270663";
+    private static final String CONTAINER = "users_shorts";
 
     private static CosmosNoSQL instance;
 
@@ -79,10 +80,13 @@ public class CosmosNoSQL {
     }
 
     public <T> Result<T> deleteOne(T obj) {
-        return tryCatch( () -> {
-            container.deleteItem(obj, new CosmosItemRequestOptions());
-            return obj;
-        });
+            var result = container.deleteItem(obj, new CosmosItemRequestOptions());
+            if(result.getStatusCode() == 204) {
+                return Result.ok(obj);
+            }
+            else {
+                return Result.error(errorCodeFromStatus(result.getStatusCode()));
+            }
     }
 
     public <T> Result<T> updateOne(T obj) {
@@ -90,7 +94,15 @@ public class CosmosNoSQL {
     }
 
     public <T> Result<T> insertOne( T obj) {
+        System.err.println("NoSQL.insert:" + obj );
         return tryCatch( () -> container.createItem(obj).getItem());
+    }
+
+    public <T> Result<T> runOperations(List<Runnable> operations) {
+        for (Runnable operation : operations) {
+            operation.run();
+        }
+        return Result.ok();
     }
 
     private <T> Result<List<T>> query(Class<T> clazz, String queryStr) {
@@ -100,29 +112,16 @@ public class CosmosNoSQL {
         });
     }
 
-    public Result<Void> transaction(List<Runnable> operations, String partitionKeyValue) {
-            PartitionKey partitionKey = new PartitionKey(partitionKeyValue);
-            CosmosBatch batch = CosmosBatch.createCosmosBatch(partitionKey);
-            for (Runnable operation : operations) {
-                operation.run();  // Add operations to batch
-            }
-            CosmosBatchResponse response = container.executeCosmosBatch(batch);
-
-            if (!response.isSuccessStatusCode()) {
-                return Result.error(ErrorCode.CONFLICT);
-            }
-
-            return Result.ok();
-    }
-
     <T> Result<T> tryCatch( Supplier<T> supplierFunc) {
         try {
             init();
             return Result.ok(supplierFunc.get());
         } catch( CosmosException ce ) {
-            //ce.printStackTrace();
+            System.err.println("Cosmos Exception caused by: ");
+            ce.printStackTrace();
             return Result.error ( errorCodeFromStatus(ce.getStatusCode() ));
         } catch( Exception x ) {
+            System.err.println("Exception caused by: ");
             x.printStackTrace();
             return Result.error( Result.ErrorCode.INTERNAL_ERROR);
         }
