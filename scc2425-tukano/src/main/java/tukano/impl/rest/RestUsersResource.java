@@ -64,6 +64,7 @@ public class RestUsersResource extends RestResource implements RestUsers {
                 jedis.set(key, JSON.encode(user));
             }
             var updatedUser = super.resultOrThrow(impl.updateUser(name, pwd, user));
+
             jedis.set(key, JSON.encode(user));
             invalidateSearchCacheByUser(name);
             return updatedUser;
@@ -75,6 +76,8 @@ public class RestUsersResource extends RestResource implements RestUsers {
         try (var jedis = RedisCache.getCachePool().getResource()) {
             var key = USER_KEY + name;
             var value = jedis.get(key);
+            //var dbPwd = value.split(";")[1] //pwd value
+            //if dbPwd != pwd { couldn't delete, wrong password }
             if (value != null) {
                 jedis.del(key);
             }
@@ -84,8 +87,10 @@ public class RestUsersResource extends RestResource implements RestUsers {
     }
 
     /**
-     * TODO needs revision, its going to both cache and db for data,
-     *  strategy will be either complex or have data duplication on cache and even then it can be inconsistent
+     * Initially, we were thinking on implementing cache on searchUsers.
+     * Upon further discussions, we thought that for a search in the database, in order to ALWAYS provide the accurate
+     * stored values, we would always need to get them from the database, therefore eliminating the need to try to cache
+     * search results.
      *
      * @param pattern
      * @return

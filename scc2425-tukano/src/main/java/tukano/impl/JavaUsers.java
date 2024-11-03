@@ -19,6 +19,8 @@ public class JavaUsers implements Users {
     private static final Logger Log = Logger.getLogger(JavaUsers.class.getName());
 
     private static Users instance;
+    
+    private static final String USER_ID_KEY = "id";
 
     private JavaUsers() {
     }
