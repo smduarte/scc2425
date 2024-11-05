@@ -11,9 +11,12 @@ import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.BlobClient;  // For BlobClient
 import java.io.ByteArrayInputStream;      // For ByteArrayInputStream
 import java.util.function.Consumer;
+import java.util.logging.Logger;
+
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response.Status;
 import main.java.tukano.api.Result;
+import main.java.tukano.impl.JavaUsers;
 import main.java.utils.Hash;
 
 public class BlobSystemStorage implements BlobStorage {
@@ -33,7 +36,8 @@ public class BlobSystemStorage implements BlobStorage {
 
     @Override
     public Result<Void> write(String path, byte[] bytes) {
-        upload(bytes);
+        BlobClient blobClient = containerClient.getBlobClient(path);
+        blobClient.upload(new ByteArrayInputStream(bytes), bytes.length, true);
         return Result.ok();
     }
 
@@ -52,7 +56,21 @@ public class BlobSystemStorage implements BlobStorage {
                 throw  new WebApplicationException(Status.NOT_FOUND);
             }
         } catch (Exception e) {
+            System.err.println("EXCEPTION: " + e);
             throw  new WebApplicationException(Status.CONFLICT);
+        }
+    }
+
+    public Result<Void> deleteAllBlobsInPath(String path) {
+        try {
+            for (BlobItem blobItem : containerClient.listBlobsByHierarchy(path)) {
+                BlobClient blobClient = containerClient.getBlobClient(blobItem.getName());
+                blobClient.delete();
+            }
+            return Result.ok();
+        } catch (Exception e) {
+            System.err.println("EXCEPTION: " + e);
+            throw new WebApplicationException(Status.CONFLICT);
         }
     }
 
@@ -65,14 +83,6 @@ public class BlobSystemStorage implements BlobStorage {
     public Result<Void> read(String path, Consumer<byte[]> sink) {
         downloadSink(path, sink);
         return Result.ok();
-    }
-
-    private String upload(byte[] contents) {
-        var key = Hash.of(contents);
-        //	map.put(key, contents);
-        BlobClient blob = containerClient.getBlobClient(key); // Get blob client
-        blob.upload(new ByteArrayInputStream(contents), contents.length); // Upload blob to Azure
-        return key;
     }
 
 
@@ -91,7 +101,6 @@ public class BlobSystemStorage implements BlobStorage {
             throw new WebApplicationException(Status.NOT_FOUND);  // Handle if the blob does not exist
         }
     }
-
 
     private List<String> list() {
         List<String> blobNames = new ArrayList<>();

@@ -25,6 +25,6 @@ public class LikesCosmos extends Likes{
 
     @Override
     public String toString() {
-        return "LikesCosmos [id=" + id + ", userId=" + getUserId() + ", shortId=" + getShortId() + ", ownerId=" + getOwnerId() + "]";
+        return "LikesCosmos [userId=" + getUserId() + ", shortId=" + getShortId() + ", ownerId=" + getOwnerId() + "]";
     }
 }

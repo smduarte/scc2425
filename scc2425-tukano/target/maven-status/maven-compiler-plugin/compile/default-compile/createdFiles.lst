@@ -1,3 +1,4 @@
+main/java/tukano/api/functions/IncrementViewsFunction.class
 main/java/utils/DB.class
 main/java/tukano/impl/rest/utils/CustomLoggingFilter.class
 main/java/tukano/impl/storage/BlobSystemStorage.class
@@ -8,6 +9,7 @@ main/java/tukano/impl/data/Following.class
 main/test/tukano/clients/rest/RestShortsClient.class
 main/java/tukano/impl/data/Likes.class
 main/java/utils/Props.class
+main/java/utils/CosmosNoSQL$1.class
 main/java/tukano/impl/JavaUsers.class
 main/java/tukano/impl/data/FollowingCosmos.class
 main/test/tukano/clients/rest/RestShortsClient$2.class
@@ -24,6 +26,7 @@ main/test/test/Test.class
 main/java/tukano/api/rest/RestUsers.class
 main/java/tukano/impl/rest/RestUsersResource.class
 main/java/utils/TLS.class
+main/java/tukano/api/functions/CreateUserFunction.class
 main/java/utils/CosmosDB.class
 main/java/tukano/impl/rest/utils/GenericExceptionMapper.class
 main/java/tukano/api/Result.class
@@ -37,6 +40,7 @@ main/java/utils/JSON.class
 main/test/tukano/clients/rest/RestShortsClient$1.class
 main/java/tukano/api/Blobs.class
 main/java/utils/Hash.class
+main/java/tukano/api/Blob.class
 main/java/tukano/api/rest/RestBlobs.class
 main/java/tukano/api/Short.class
 main/java/tukano/impl/storage/BlobStorage.class
@@ -55,6 +59,7 @@ main/java/utils/CosmosNoSQL.class
 main/java/tukano/impl/HibernateUsers.class
 main/java/tukano/api/ErrorResult.class
 main/java/utils/IO.class
+main/java/tukano/api/functions/BlobViewsCounter.class
 main/test/tukano/clients/rest/RestShortsClient$3.class
 main/java/tukano/api/ShortCosmos.class
 main/java/tukano/impl/rest/RestBlobsResource.class

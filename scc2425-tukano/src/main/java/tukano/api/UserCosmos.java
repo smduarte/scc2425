@@ -24,7 +24,7 @@ public class UserCosmos extends User {
 
     @Override
     public String toString() {
-        return "UserWithId [id=" + id + ", userId=" + getUserId() + ", pwd=" + getPwd() +
+        return "UserWithId [userId=" + getUserId() + ", pwd=" + getPwd() +
                 ", email=" + getEmail() + ", displayName=" + getDisplayName() + "]";
     }
 }

@@ -13,6 +13,7 @@
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/utils/CosmosDB.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/api/ShortCosmos.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/impl/rest/utils/CustomLoggingFilter.java
+/Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/api/Blob.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/api/Result.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/impl/storage/BlobSystemStorage.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/utils/Random.java
@@ -25,10 +26,13 @@
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/api/Users.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/impl/storage/FilesystemStorage.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/utils/Sleep.java
+/Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/api/functions/IncrementViewsFunction.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/utils/DB.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/utils/IO.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/impl/rest/RestUsersResource.java
+/Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/api/functions/BlobViewsCounter.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/impl/data/FollowingCosmos.java
+/Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/api/functions/CreateUserFunction.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/impl/HibernateUsers.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/api/Short.java
 /Users/Miguel/IdeaProjects/SCC/scc2425/scc2425-tukano/src/main/java/tukano/impl/rest/RestBlobsResource.java

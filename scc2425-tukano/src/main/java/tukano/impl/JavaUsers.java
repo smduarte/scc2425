@@ -116,11 +116,11 @@ public class JavaUsers implements Users {
 				Log.info("User removed from cache \n");
 			}
 
-			// Delete user shorts and related info asynchronously in a separate thread
-			Executors.defaultThreadFactory().newThread( () -> {
-				JavaShorts.getInstance().deleteAllShorts(userId, pwd, Token.get(userId));
-				JavaBlobs.getInstance().deleteAllBlobs(userId, Token.get(userId));
-			}).start();
+			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+				jedis.expire("user:" + userId, 1); // 1 second expiration as a final fallback
+			}
+			JavaBlobs.getInstance().deleteAllBlobs(userId, Token.get(userId));
+			JavaShorts.getInstance().deleteAllShorts(userId, pwd, Token.get(userId));
 
 			UserCosmos cosmosUser = new UserCosmos(user);
 			return CosmosDB.deleteOne( cosmosUser);

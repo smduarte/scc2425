@@ -23,7 +23,7 @@ public class JavaBlobs implements Blobs {
 	private static Logger Log = Logger.getLogger(JavaBlobs.class.getName());
 
 	public String baseURI;
-	private BlobStorage storage;
+	private BlobSystemStorage storage;
 	
 	synchronized public static Blobs getInstance() {
 		if( instance == null )
@@ -40,10 +40,12 @@ public class JavaBlobs implements Blobs {
 	public Result<Void> upload(String blobId, byte[] bytes, String token) {
 		Log.info(() -> format("upload : blobId = %s, sha256 = %s, token = %s\n", blobId, Hex.of(Hash.sha256(bytes)), token));
 
-	//	if (!validBlobId(blobId, token))
-	//		return error(FORBIDDEN);
+		if (!validBlobId(blobId, token))
+			return error(FORBIDDEN);
 
 		Result<Void> result = storage.write(toPath(blobId), bytes);
+		Log.info("Upload Path \n");
+		Log.info(toPath(blobId));
 
 		// Clear cache on upload
 		try (Jedis jedis = RedisCache.getCachePool().getResource()) {
@@ -94,6 +96,9 @@ public class JavaBlobs implements Blobs {
 			jedis.del("blob:" + blobId);
 		}
 
+		Log.info("Delete Path \n");
+		Log.info(toPath(blobId));
+
 		return storage.delete( toPath(blobId));
 	}
 	
@@ -103,17 +108,20 @@ public class JavaBlobs implements Blobs {
 
 		if( ! Token.isValid( token, userId ) )
 			return error(FORBIDDEN);
-		
-		return storage.delete( toPath(userId));
+
+		return storage.deleteAllBlobsInPath(addPrefix(userId));
 	}
 	
-	private boolean validBlobId(String blobId, String token) {		
-		System.out.println( toURL(blobId));
+	private boolean validBlobId(String blobId, String token) {
 		return Token.isValid(token, toURL(blobId));
 	}
 
 	private String toPath(String blobId) {
 		return blobId.replace("+", "/");
+	}
+
+	private String addPrefix(String userId) {
+		return userId + "/";
 	}
 	
 	private String toURL( String blobId ) {

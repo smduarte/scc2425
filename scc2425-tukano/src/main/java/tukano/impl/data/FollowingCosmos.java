@@ -25,6 +25,6 @@ public class FollowingCosmos extends Following{
 
     @Override
     public String toString() {
-        return "FollowingCosmos [id=" + id + ", follower=" + getFollower() + ", followee=" + getFollowee() + "]";
+        return "FollowingCosmos [follower=" + getFollower() + ", followee=" + getFollowee() + "]";
     }
 }

@@ -31,7 +31,7 @@ public class ShortCosmos extends Short {
 
     @Override
     public String toString() {
-        return "ShortCosmos [id=" + id + ", shortId=" + getShortId() + ", ownerId=" + getOwnerId() +
+        return "ShortCosmos [shortId=" + getShortId() + ", ownerId=" + getOwnerId() +
                 ", blobUrl=" + getBlobUrl() + ", timestamp=" + getTimestamp() +
                 ", totalLikes=" + getTotalLikes() + "]";
     }

@@ -11,6 +11,7 @@ import static main.java.utils.CosmosDB.getOne;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -54,21 +55,10 @@ public class JavaShorts implements Shorts {
 			var blobUrl = format("%s/%s/%s", TukanoRestServer.serverURI, Blobs.NAME, shortId);
 			var shrt = new Short(shortId, userId, blobUrl);
 			ShortCosmos shrtCosmos = new ShortCosmos(shrt);
-
-			String token = Token.get(blobUrl);
-			Log.info("Generated token: " + token);
-
-			// Commented in JavaBlobs so it passes
-			// Is the problem in the token or in the first argument (blobId) ???
-			// We're sending blobUrl but it expects the blobId...
-			var result = JavaBlobs.getInstance().upload(blobUrl, randomBytes(100), Token.get(blobUrl));
-			Log.info(Token.get(blobUrl));
-
-			if (result.isOK()) {
-				Log.info("everything ok (TEST)");
-			}
-			else
-				Log.info("error: " + result.error());
+			Log.info("BLOB URL UPLOADED: " + blobUrl);
+			Executors.defaultThreadFactory().newThread( () -> {
+				JavaBlobs.getInstance().upload(shortId, randomBytes(100), Token.get(blobUrl));
+			}).start();
 
 			return errorOrValue(CosmosDB.insertOne(shrtCosmos), s -> s.copyWithLikes_And_Token(0));
 		});
@@ -93,20 +83,56 @@ public class JavaShorts implements Shorts {
 			} else {
 				Log.info( () -> format("Short %s was not found in cache", shortId));
 
-				Result<Short> result = errorOrValue(getOne(shortId, Short.class), this::getShortWithLikes);
+				Result<Short> result = getOne(shortId, Short.class);
+				Log.info("BLOB URL FROM GET SHORT " + result.value().getBlobUrl());
 
 				if (result.isOK()) {
 					jedis.setex("short:" + shortId, 3600, JSON.encode(result.value()));
+					return Result.ok(getShortWithLikes(result.value()));
 				}
-				return result;
+				else {
+					return Result.error(result.error());
+				}
 			}
 		}
+	}
+
+	private Result<Short> getShortWithoutToken(String shortId) {
+		Log.info(() -> format("getShort : shortId = %s\n", shortId));
+
+		if( shortId == null )
+			return error(BAD_REQUEST);
+
+		Log.info( () -> format("Checking if short %s is in cache", shortId));
+		try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+
+			String cachedShort = jedis.get("short:" + shortId);
+			if (cachedShort != null) {
+				Log.info( () -> format("Short %s was found in cache", shortId));
+
+				return ok(JSON.decode(cachedShort, Short.class));
+
+			} else {
+				Log.info( () -> format("Short %s was not found in cache", shortId));
+
+				Result<Short> result = getOne(shortId, Short.class);
+				Log.info("BLOB URL FROM GET SHORT " + result.value().getBlobUrl());
+
+				if (result.isOK()) {
+					jedis.setex("short:" + shortId, 3600, JSON.encode(result.value()));
+					return Result.ok(result.value());
+				}
+				else {
+					return Result.error(result.error());
+				}
+			}
 		}
+	}
 
 	@Override
 	public Result<Void> deleteShort(String shortId, String password) {
 		Log.info(() -> format("deleteShort : shortId = %s, pwd = %s\n", shortId, password));
-		return errorOrResult( getShort(shortId), shrt -> {
+		return errorOrResult( getShortWithoutToken(shortId), shrt -> {
 			return errorOrResult( okUser( shrt.getOwnerId(), password), user -> {
 				List<Runnable> operations = new ArrayList<>();
 
@@ -119,16 +145,15 @@ public class JavaShorts implements Shorts {
 					operations.add(() -> CosmosDB.deleteOne(lCosmos));
 				}
 
-				operations.add(() -> {
-					JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get());
-				});
+				Executors.defaultThreadFactory().newThread( () -> {
+					Log.info("BLOB URL DELETED: " + shrt.getBlobUrl());
+					JavaBlobs.getInstance().delete(shrt.getShortId(), Token.get(shrt.getBlobUrl()));
+				}).start();
 
 				// Clear cache
-				operations.add(() -> {
-					try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-						jedis.del("short:" + shortId);
-					}
-				});
+				try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+					jedis.del("short:" + shortId);
+				}
 
 				ShortCosmos shrtCosmos = new ShortCosmos(shrt);
 				operations.add(() -> CosmosDB.deleteOne(shrtCosmos));
@@ -285,14 +310,10 @@ public class JavaShorts implements Shorts {
 
 		List<Short> shortsList = CosmosDB.sql(shortsQuery, Short.class);
 		for (Short shrt : shortsList) {
-			operations.add(() -> JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get()));
-
 			// Clear cache for each deleted short
-			operations.add(() -> {
-				try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-					jedis.del("short:" + shrt.getShortId());
-				}
-			});
+			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+				jedis.del("short:" + shrt.getShortId());
+			}
 
 			ShortCosmos shrtCosmos = new ShortCosmos(shrt);
 			operations.add(() -> CosmosDB.deleteOne(shrtCosmos));
